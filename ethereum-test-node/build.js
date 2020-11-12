@@ -1,4 +1,5 @@
-const Web3 = require("web3");
+// const Web3 = require("web3");
+const Caver = require("caver-js")
 const Proxy = artifacts.require("./Proxy.sol");
 const HybridExchange = artifacts.require("./HybridExchange.sol");
 const TestToken = artifacts.require("./helper/TestToken.sol");
@@ -8,30 +9,38 @@ const BigNumber = require("bignumber.js");
 BigNumber.config({ EXPONENTIAL_AT: 1000 });
 
 const getWeb3 = () => {
-  const myWeb3 = new Web3(web3.currentProvider);
-  return myWeb3;
+  // const myWeb3 = new Web3(web3.currentProvider);
+  const caver = new Caver('https://api.baobab.klaytn.net:8651')
+  return caver;
+  // return myWeb3;
 };
 
 const newContract = async (contract, ...args) => {
   const c = await contract.new(...args);
   const w = getWeb3();
-  const instance = new w.eth.Contract(contract.abi, c.address);
+  // const instance = new w.eth.Contract(contract.abi, c.address);
+  const instance = new w.klay.Contract(contract.abi, c.address);
   return instance;
 };
 
 const newContractAt = (contract, address) => {
   const w = getWeb3();
-  const instance = new w.eth.Contract(contract.abi, address);
+  // const instance = new w.eth.Contract(contract.abi, address);
+  const instance = new w.klay.Contract(contract.abi, address);
   return instance;
 };
 
 module.exports = async () => {
   let hot, exchange, proxy;
   try {
-    const testAddresses = web3.eth.accounts.slice(1, 6);
-    const owner = web3.eth.accounts[0];
-    const relayer = web3.eth.accounts[9];
-    const maker = web3.eth.accounts[8];
+    // const testAddresses = web3.eth.accounts.slice(1, 6);
+    const testAddresses = caver.klay.accounts.slice(1, 6);
+    // const owner = web3.eth.accounts[0];
+    const owner = caver.klay.accounts[0];
+    // const relayer = web3.eth.accounts[9];
+    const relayer = caver.klay.accounts[9];
+    // const maker = web3.eth.accounts[8];
+    const maker = caver.klay.accounts[8];
 
     console.log("owner", owner);
     console.log("relayer", relayer);
@@ -42,27 +51,38 @@ module.exports = async () => {
       "0xf000000000000000000000000000000000000000000000000000000000000000";
 
     hot = await newContract(TestToken, "HydroToken", "Hot", 18);
-    console.log("Hydro Token address", web3.toChecksumAddress(hot._address));
+    // console.log("Hydro Token address", web3.toChecksumAddress(hot._address));
+    console.log("Hydro Token address", caver.toChecksumAddress(hot._address));
 
     proxy = await newContract(Proxy);
-    console.log("Proxy address", web3.toChecksumAddress(proxy._address));
+    // console.log("Proxy address", web3.toChecksumAddress(proxy._address));
+    console.log("Proxy address", caver.toChecksumAddress(proxy._address));
 
     exchange = await newContract(HybridExchange, proxy._address, hot._address);
+    // console.log(
+    //   "HybridExchange address",
+    //   web3.toChecksumAddress(exchange._address)
+    // );
     console.log(
       "HybridExchange address",
-      web3.toChecksumAddress(exchange._address)
+      caver.toChecksumAddress(exchange._address)
     );
 
     await Proxy.at(proxy._address).addAddress(exchange._address);
     console.log("Proxy add exchange into whitelist");
 
     usd = await newContract(TestToken, "USD TOKEN", "USD", 18);
-    console.log("USD TOKEN address", web3.toChecksumAddress(usd._address));
+    // console.log("USD TOKEN address", web3.toChecksumAddress(usd._address));
+    console.log("USD TOKEN address", caver.toChecksumAddress(usd._address));
 
     weth = await newContract(WethToken, "Wrapped Ethereum", "WETH", 18);
+    // console.log(
+    //   "Wrapped Ethereum TOKEN address",
+    //   web3.toChecksumAddress(weth._address)
+    // );
     console.log(
       "Wrapped Ethereum TOKEN address",
-      web3.toChecksumAddress(weth._address)
+      caver.toChecksumAddress(weth._address)
     );
 
     const approveAllToken = async (address, tokens) => {
